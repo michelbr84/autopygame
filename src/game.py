@@ -1,41 +1,51 @@
 import pygame
-from .board import Board
-from .piece import Piece
-from . import utils
+import sys
 
 class Game:
     def __init__(self, settings):
+        """
+        Initialize pygame and create the game screen based on settings.
+        Expected settings keys: SCREEN_WIDTH, SCREEN_HEIGHT, FPS (and optionally others).
+        """
         self.settings = settings
-        self.board = Board(settings)
+        pygame.init()
+        self.screen = pygame.display.set_mode(
+            (settings['SCREEN_WIDTH'], settings['SCREEN_HEIGHT'])
+        )
         self.clock = pygame.time.Clock()
-        self.active_piece = None
-        self.falling = False
-        self.create_new_piece()
 
-    def create_new_piece(self):
-        # Instantiate a new piece (random shape & color) and place it at top center
-        self.active_piece = Piece(self.settings)
-        self.active_piece.x = self.settings['BOARD_WIDTH'] // 2 - len(self.active_piece.shape[0]) // 2
-        self.active_piece.y = 0
-        self.falling = True
+    def run(self):
+        """
+        Main game loop:
+          - Process events (including QUIT to exit)
+          - Update game state (placeholder)
+          - Draw / render (placeholder)
+          - Tick the clock at the target FPS
+        """
+        # Main loop
+        while True:
+            # Process events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
-    def update(self):
-        if self.falling:
-            if utils.time_to_drop(self.clock.get_rawtime(), self.settings.get('DROP_SPEED', 500)):
-                # Try to move piece down one cell
-                self.active_piece.move(0, 0, 1)
-                # Check if new position is still valid
-                if not self.board.is_valid_position(self.active_piece.get_shape(), self.active_piece.x, self.active_piece.y):
-                    # Revert movement
-                    self.active_piece.move(0, 0, -1)
-                    # Lock the piece, clear lines, and create a new piece
-                    self.board.lock_piece(self.active_piece)
-                    self.board.clear_lines()
-                    self.create_new_piece()
-        utils.handle_input(self)
+            # Update game state (placeholder - override or extend in subclasses)
+            # self.update()
 
-    def draw(self, surface):
-        # Draw all locked pieces
-        self.board.draw(surface)
-        # Draw the currently falling piece
-        self.active_piece.draw(surface)
+            # Draw / render (placeholder - override or extend in subclasses)
+            # self.draw()
+
+            pygame.display.flip()
+            self.clock.tick(self.settings['FPS'])
+
+
+# Optional: simple direct execution for testing
+if __name__ == '__main__':
+    SETTINGS = {
+        'SCREEN_WIDTH': 800,
+        'SCREEN_HEIGHT': 600,
+        'FPS': 60
+    }
+    game = Game(SETTINGS)
+    game.run()
