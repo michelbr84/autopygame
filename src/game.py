@@ -1,70 +1,41 @@
-# src/game.py
 import pygame
-from .settings import SETTINGS
 from .board import Board
 from .piece import Piece
+from . import utils
 
 class Game:
-    def __init__(self, screen, background, tile_image, piece_image, sounds):
-        self.screen = screen
-        self.background = background
-        self.tile_image = tile_image
-        self.piece_image = piece_image
-        self.sounds = sounds
+    def __init__(self, settings):
+        self.settings = settings
+        self.board = Board(settings)
+        self.clock = pygame.time.Clock()
+        self.active_piece = None
+        self.falling = False
+        self.create_new_piece()
 
-        self.board = Board(SETTINGS['BOARD_WIDTH'], SETTINGS['BOARD_HEIGHT'])
-        self.current_piece = None
-        self.next_piece = None
-        self.fall_event = pygame.USEREVENT + 1
-        pygame.time.set_timer(self.fall_event, SETTINGS['FALL_SPEED'])
-
-        self.running = True
-        self.new_piece()
-
-    def new_piece(self):
-        """Create a new current piece and a new next piece."""
-        self.current_piece = self.next_piece if self.next_piece else Piece.random_piece()
-        self.next_piece = Piece.random_piece()
-
-    def handle_event(self, event):
-        """Process user input."""
-        if event.type == pygame.QUIT:
-            self.running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                self.current_piece.move(-1)
-            elif event.key == pygame.K_RIGHT:
-                self.current_piece.move(1)
-            elif event.key == pygame.K_DOWN:
-                self.current_piece.move(0, 1)
-            elif event.key == pygame.K_UP:
-                self.current_piece.rotate()
+    def create_new_piece(self):
+        # Instantiate a new piece (random shape & color) and place it at top center
+        self.active_piece = Piece(self.settings)
+        self.active_piece.x = self.settings['BOARD_WIDTH'] // 2 - len(self.active_piece.shape[0]) // 2
+        self.active_piece.y = 0
+        self.falling = True
 
     def update(self):
-        """Update game state: move piece down automatically."""
-        for event in pygame.event.get():
-            if event.type == self.fall_event:
-                if not self.current_piece.move(0, 1):
-                    # Piece can't move down → lock it
-                    self.board.lock_piece(self.current_piece)
-                    self.clear_lines()
-                    self.new_piece()
-        # If the game is over (new piece collides immediately), you could handle it here.
+        if self.falling:
+            if utils.time_to_drop(self.clock.get_rawtime(), self.settings.get('DROP_SPEED', 500)):
+                # Try to move piece down one cell
+                self.active_piece.move(0, 0, 1)
+                # Check if new position is still valid
+                if not self.board.is_valid_position(self.active_piece.get_shape(), self.active_piece.x, self.active_piece.y):
+                    # Revert movement
+                    self.active_piece.move(0, 0, -1)
+                    # Lock the piece, clear lines, and create a new piece
+                    self.board.lock_piece(self.active_piece)
+                    self.board.clear_lines()
+                    self.create_new_piece()
+        utils.handle_input(self)
 
-    def clear_lines(self):
-        """Check for completed lines, remove them, and play a sound."""
-        lines_cleared = self.board.clear_lines()
-        if lines_cleared > 0:
-            self.sounds['line_clear'].play()
-
-    def draw(self):
-        """Render everything to the screen."""
-        self.screen.blit(self.background, (0, 0))
-
-        # Draw the board
-        self.board.draw(self.screen, self.tile_image)
-
-        # Draw the falling piece
-        self.current_piece.draw(self.screen, self.tile_image)
-
-        pygame.display.flip()
+    def draw(self, surface):
+        # Draw all locked pieces
+        self.board.draw(surface)
+        # Draw the currently falling piece
+        self.active_piece.draw(surface)
