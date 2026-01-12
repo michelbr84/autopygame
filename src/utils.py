@@ -1,24 +1,40 @@
-# src/utils.py
+import pygame
+import random
 
-def get_piece_color(piece_id):
-    """
-    Return the RGB color for a given tetromino piece ID.
-    IDs correspond to the standard tetrominoes:
-    1 - I (Green)
-    2 - J (Blue)
-    3 - L (Yellow)
-    4 - O (Magenta)
-    5 - S (Cyan)
-    6 - T (Red)
-    7 - Z (Orange)
-    """
-    colors = {
-        1: (0, 255, 0),    # I
-        2: (0, 0, 255),    # J
-        3: (255, 255, 0),  # L
-        4: (255, 0, 255),  # O
-        5: (0, 255, 255),  # S
-        6: (255, 0, 0),    # T
-        7: (255, 165, 0),  # Z
-    }
-    return colors.get(piece_id, (255, 255, 255))
+SHAPES = {
+    'I': [[1,1,1,1]],
+    'O': [[1,1],[1,1]],
+    'T': [[0,1,0],[1,1,1]],
+    'S': [[0,1,1],[1,1,0]],
+    'Z': [[1,1,0],[0,1,1]],
+    'J': [[1,0,0],[1,1,1]],
+    'L': [[0,0,1],[1,1,1]],
+}
+
+def get_shape(name=None):
+    if name is None:
+        return random.choice(list(SHAPES.keys()))
+    return SHAPES.get(name, None)
+
+def random_shape():
+    return random.choice(list(SHAPES.keys()))
+
+def random_color():
+    return (random.randint(0,255), random.randint(0,255), random.randint(0,255))
+
+def time_to_drop(elapsed, speed):
+    return elapsed > speed
+
+def handle_input(game):
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                game.active_piece.move(-1, 0)
+            elif event.key == pygame.K_RIGHT:
+                game.active_piece.move(1, 0)
+            elif event.key == pygame.K_UP:
+                game.active_piece.rotate()
+            elif event.key == pygame.K_DOWN:
+                game.active_piece.move(0, 1)
+            elif event.key == pygame.K_SPACE:
+                game.falling = False
