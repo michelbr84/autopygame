@@ -1,40 +1,30 @@
 import pygame
-import sys
 
 class Game:
-    def __init__(self, settings):
+    def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode(
-            (settings['SCREEN_WIDTH'], settings['SCREEN_HEIGHT'])
-        )
-        self.settings = settings
+        self.screen = pygame.display.set_mode((settings['SCREEN_WIDTH'], settings['SCREEN_HEIGHT']))
         self.clock = pygame.time.Clock()
+        self.running = True
 
-    def update(self):
-        # Placeholder for game logic updates
-        pass
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                self.running = False
 
     def draw(self):
-        # Placeholder for drawing
+        self.screen.fill((0, 0, 0))
+        pygame.display.flip()
+
+    def update(self):
         pass
 
     def run(self):
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+        while self.running:
+            self.handle_events()
             self.update()
             self.draw()
-            pygame.display.flip()
-            self.clock.tick(self.settings['FPS'])
-
+            self.clock.tick(settings.get('FPS', 60))
 
 if __name__ == "__main__":
-    settings = {
-        'SCREEN_WIDTH': 800,
-        'SCREEN_HEIGHT': 600,
-        'FPS': 60,
-    }
-    game = Game(settings)
-    game.run()
+    Game().run()
