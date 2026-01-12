@@ -1,9 +1,16 @@
 {
-    "WIDTH": 300,
-    "HEIGHT": 600,
-    "CELL_SIZE": 30,
-    "FPS": 60,
-    "DROP_SPEED": 500,
-    "BOARD_WIDTH": 10,
-    "BOARD_HEIGHT": 20
+  "WINDOW_WIDTH": 400,
+  "WINDOW_HEIGHT": 600,
+  "CELL_SIZE": 30,
+  "FPS": 60,
+  "BOARD_WIDTH": 10,
+  "BOARD_HEIGHT": 20,
+  "DROP_SPEED": 1000,
+  "PAUSE_KEY": "p",
+  "LEFT_KEY": "left",
+  "RIGHT_KEY": "right",
+  "DOWN_KEY": "down",
+  "ROTATE_KEY": "up",
+  "SCREEN_WIDTH": 400,
+  "SCREEN_HEIGHT": 600
 }
