@@ -1,0 +1,9 @@
+{
+    "WIDTH": 300,
+    "HEIGHT": 600,
+    "CELL_SIZE": 30,
+    "FPS": 60,
+    "DROP_SPEED": 500,
+    "BOARD_WIDTH": 10,
+    "BOARD_HEIGHT": 20
+}
