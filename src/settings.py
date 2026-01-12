@@ -1,57 +1,79 @@
-"""Settings module for the game."""
+"""Configuration settings for the game."""
 
 import json
-import pathlib
+from pathlib import Path
 
-# Project root is the directory containing this file's parent (i.e., the repo root)
-PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-SETTINGS_PATH = PROJECT_ROOT / "settings.json"
-
-# Default settings (excluding COLORS, which is defined independently)
-DEFAULTS = {
-    "WINDOW_WIDTH": 800,
+# Default settings
+DEFAULT_SETTINGS = {
+    "SCREEN_WIDTH": 400,
+    "SCREEN_HEIGHT": 600,
+    "WINDOW_WIDTH": 400,
     "WINDOW_HEIGHT": 600,
-    "CELL_SIZE": 40,
+    "CELL_SIZE": 20,
     "FPS": 60,
     "BOARD_WIDTH": 10,
     "BOARD_HEIGHT": 20,
-    "DROP_SPEED": 0.5,
+    "DROP_SPEED": 1000,
     "PAUSE_KEY": "p",
     "LEFT_KEY": "left",
     "RIGHT_KEY": "right",
     "DOWN_KEY": "down",
     "ROTATE_KEY": "rotate",
+    # Add other defaults as needed
 }
 
-# Independent hard‑coded colors dictionary
+# Load user-provided settings.json if it exists
+SETTINGS_PATH = Path(__file__).with_name("settings.json")
+try:
+    if SETTINGS_PATH.is_file():
+        with SETTINGS_PATH.open("r", encoding="utf-8") as f:
+            user_settings = json.load(f)
+        # Ensure the loaded settings are a dict; otherwise fallback to empty
+        if isinstance(user_settings, dict):
+            # Merge user settings over defaults (user values win)
+            merged = {**DEFAULT_SETTINGS, **user_settings}
+        else:
+            merged = DEFAULT_SETTINGS.copy()
+    else:
+        merged = DEFAULT_SETTINGS.copy()
+except (json.JSONDecodeError, OSError):
+    # Handle malformed or unreadable JSON gracefully
+    merged = DEFAULT_SETTINGS.copy()
+
+# Assign merged settings to the module-level SETTINGS dict
+SETTINGS = merged
+
+# Explicitly guarantee required keys exist (they should already, but safe)
+SCREEN_WIDTH = SETTINGS.get("SCREEN_WIDTH", 400)
+SCREEN_HEIGHT = SETTINGS.get("SCREEN_HEIGHT", 600)
+
+# Export constants directly (they reference SETTINGS values)
+WINDOW_WIDTH = SETTINGS["WINDOW_WIDTH"]
+WINDOW_HEIGHT = SETTINGS["WINDOW_HEIGHT"]
+CELL_SIZE = SETTINGS["CELL_SIZE"]
+FPS = SETTINGS["FPS"]
+BOARD_WIDTH = SETTINGS["BOARD_WIDTH"]
+BOARD_HEIGHT = SETTINGS["BOARD_HEIGHT"]
+DROP_SPEED = SETTINGS["DROP_SPEED"]
+PAUSE_KEY = SETTINGS["PAUSE_KEY"]
+LEFT_KEY = SETTINGS["LEFT_KEY"]
+RIGHT_KEY = SETTINGS["RIGHT_KEY"]
+DOWN_KEY = SETTINGS["DOWN_KEY"]
+ROTATE_KEY = SETTINGS["ROTATE_KEY"]
+SCREEN_WIDTH = SCREEN_WIDTH  # redundant but keeps naming consistent
+SCREEN_HEIGHT = SCREEN_HEIGHT
+
+# Define COLORS independently of SETTINGS to avoid KeyError
 COLORS = {
     "WHITE": (255, 255, 255),
     "BLACK": (0, 0, 0),
     "RED": (255, 0, 0),
     "GREEN": (0, 255, 0),
     "BLUE": (0, 0, 255),
-    "YELLOW": (255, 255, 0),
-    "CYAN": (0, 255, 255),
-    "MAGENTA": (255, 0, 255),
-    "ORANGE": (255, 165, 0),
+    # Add more colors as needed
 }
 
-# Load external settings safely
-try:
-    with open(SETTINGS_PATH, "r", encoding="utf-8") as f:
-        user_settings = json.load(f)
-    # Merge user settings into defaults; user values override defaults
-    for key, value in user_settings.items():
-        if key in DEFAULTS:
-            DEFAULTS[key] = value
-except (FileNotFoundError, json.JSONDecodeError, PermissionError):
-    # If the file is missing or malformed, keep the defaults unchanged
-    pass
-
-# Export the merged settings dictionary
-SETTINGS = DEFAULTS
-
-# Export all constants via __all__
+# Define what should be exported when `from settings import *` is used
 __all__ = [
     "SETTINGS",
     "WINDOW_WIDTH",
@@ -66,5 +88,9 @@ __all__ = [
     "RIGHT_KEY",
     "DOWN_KEY",
     "ROTATE_KEY",
+    "SCREEN_WIDTH",
+    "SCREEN_HEIGHT",
     "COLORS",
 ]
+
+# End of file
