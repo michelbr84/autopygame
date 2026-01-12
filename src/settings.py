@@ -1,74 +1,80 @@
-import json
-from pathlib import Path
+"""
+settings.py - Central configuration loader for the Tetris‑style game.
 
-# Resolve settings.json relative to the project root (one level up from src/)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+- Loads Settings.json from the project root into a module‑level `SETTINGS` dict.
+- Provides fallback default values if the JSON file is missing or malformed.
+- Exports all required constants (WINDOW_WIDTH, WINDOW_HEIGHT, CELL_SIZE,
+  FPS, BOARD_WIDTH, BOARD_HEIGHT, DROP_SPEED, PAUSE_KEY, LEFT_KEY,
+  RIGHT_KEY, DOWN_KEY, ROTATE_KEY) using the merged `SETTINGS` values or
+  defaults.
+- Defines `COLORS` as its own hard‑coded dictionary (do **not** fetch it
+  from `SETTINGS`) to avoid KeyError.
+- Declares `__all__` to explicitly export `SETTINGS` and all constants.
+- Safely handles missing or malformed configuration files.
+"""
+
+import json
+import pathlib
+import sys
+
+# ----------------------------------------------------------------------
+# Resolve the path to settings.json relative to this file (project root)
+# ----------------------------------------------------------------------
+PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
 SETTINGS_PATH = PROJECT_ROOT / "settings.json"
 
 # ----------------------------------------------------------------------
-# Default settings – used if the file is missing or malformed
+# Default configuration values
 # ----------------------------------------------------------------------
-_DEFAULTS = {
-    "WINDOW_WIDTH": 800,
+DEFAULTS = {
+    "WINDOW_WIDTH": 400,
     "WINDOW_HEIGHT": 600,
     "CELL_SIZE": 30,
     "FPS": 60,
     "BOARD_WIDTH": 10,
     "BOARD_HEIGHT": 20,
-    "DROP_SPEED": 1000,  # milliseconds
+    "DROP_SPEED": 1000,
     "PAUSE_KEY": "p",
     "LEFT_KEY": "left",
     "RIGHT_KEY": "right",
     "DOWN_KEY": "down",
-    "ROTATE_KEY": "rotate",
+    "ROTATE_KEY": "up",
+    # Note: COLORS is defined separately (see below) and should NOT be loaded
+    # from the JSON file.
 }
 
-# Load settings.json safely
+# ----------------------------------------------------------------------
+# Load SETTINGS from JSON if it exists; otherwise use defaults
+# ----------------------------------------------------------------------
 try:
     if SETTINGS_PATH.is_file():
         with SETTINGS_PATH.open("r", encoding="utf-8") as f:
-            _user_settings = json.load(f)
-        # Ensure we have a dict; if not, fall back to defaults
-        if not isinstance(_user_settings, dict):
-            raise ValueError("settings.json must contain a JSON object")
-        # Merge user settings over defaults (user values take precedence)
-        SETTINGS = {**_defaults, **_user_settings}
+            user_cfg = json.load(f)
+        # Merge user config over defaults (keep defaults for missing keys)
+        SETTINGS = {**DEFAULTS, **user_cfg}
     else:
-        SETTINGS = _DEFAULTS.copy()
-except (json.JSONDecodeError, ValueError, OSError) as exc:
-    # Any error (missing file, bad JSON, permission issue) falls back to defaults
-    SETTINGS = _DEFAULTS.copy()
-
-
-# ----------------------------------------------------------------------
-# Export constants using values from SETTINGS or fall back to defaults
-# ----------------------------------------------------------------------
-WINDOW_WIDTH = SETTINGS["WINDOW_WIDTH"]
-WINDOW_HEIGHT = SETTINGS["WINDOW_HEIGHT"]
-CELL_SIZE = SETTINGS["CELL_SIZE"]
-FPS = SETTINGS["FPS"]
-BOARD_WIDTH = SETTINGS["BOARD_WIDTH"]
-BOARD_HEIGHT = SETTINGS["BOARD_HEIGHT"]
-DROP_SPEED = SETTINGS["DROP_SPEED"]
-PAUSE_KEY = SETTINGS["PAUSE_KEY"]
-LEFT_KEY = SETTINGS["LEFT_KEY"]
-RIGHT_KEY = SETTINGS["RIGHT_KEY"]
-DOWN_KEY = SETTINGS["DOWN_KEY"]
-ROTATE_KEY = SETTINGS["ROTATE_KEY"]
+        SETTINGS = DEFAULTS.copy()
+except (json.JSONDecodeError, OSError) as e:
+    # On any error, fall back to defaults and optionally log/print
+    SETTINGS = DEFAULTS.copy()
+    # Optionally, you could print a warning here:
+    # print(f"Warning: Could not load '{SETTINGS_PATH}': {e}")
 
 # ----------------------------------------------------------------------
-# Independent hard‑coded colors dictionary – DO NOT load from SETTINGS
+# Hard‑coded colors dictionary (do NOT load from SETTINGS)
 # ----------------------------------------------------------------------
 COLORS = {
-    "background": (0, 0, 0),
-    "grid": (40, 40, 40),
-    "text": (255, 255, 255),
-    "block": (0, 255, 0),
-    "next": (255, 165, 0),
+    'I': (0, 255, 255),
+    'O': (255, 255, 0),
+    'T': (128, 0, 128),
+    'S': (0, 255, 0),
+    'Z': (255, 0, 0),
+    'J': (0, 0, 255),
+    'L': (255, 165, 0),
 }
 
 # ----------------------------------------------------------------------
-# Define what should be exported when `from settings import *` is used
+# Export public symbols
 # ----------------------------------------------------------------------
 __all__ = [
     "SETTINGS",
@@ -86,3 +92,18 @@ __all__ = [
     "ROTATE_KEY",
     "COLORS",
 ]
+
+# Optionally expose individual constants for convenience
+# (they are also available via SETTINGS, but this makes them direct attributes)
+WINDOW_WIDTH = SETTINGS["WINDOW_WIDTH"]
+WINDOW_HEIGHT = SETTINGS["WINDOW_HEIGHT"]
+CELL_SIZE = SETTINGS["CELL_SIZE"]
+FPS = SETTINGS["FPS"]
+BOARD_WIDTH = SETTINGS["BOARD_WIDTH"]
+BOARD_HEIGHT = SETTINGS["BOARD_HEIGHT"]
+DROP_SPEED = SETTINGS["DROP_SPEED"]
+PAUSE_KEY = SETTINGS["PAUSE_KEY"]
+LEFT_KEY = SETTINGS["LEFT_KEY"]
+RIGHT_KEY = SETTINGS["RIGHT_KEY"]
+DOWN_KEY = SETTINGS["DOWN_KEY"]
+ROTATE_KEY = SETTINGS["ROTATE_KEY"]
