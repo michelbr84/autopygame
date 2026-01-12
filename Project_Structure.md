@@ -1,59 +1,65 @@
 # Project Structure
 
-This document outlines the complete directory and file structure for the Python Pygame project.
+## Directory Layout
 
 ```
-project-root/
-├── assets/
-│   ├── images/
-│   │   ├── background.png
-│   │   ├── player.png
-│   │   ├── enemy.png
-│   │   ├── bullet.png
-│   │   └── ...
-│   └── sounds/
-│       ├── hit.wav
-│   │   └── pickup.wav
-│   └── fonts/
-│       └── pixel_font.ttf
-├── src/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── player.py
-│   ├── enemy.py
-│   ├── bullet.py
-│   ├── utils.py
-│   └── settings.py
-├── config/
-│   └── settings.yaml   # game configuration (optional)
-├── requirements.txt
-├── README.md
-└── Project_Structure.md
+project_root/
+├─ src/
+│   ├─ main.py
+│   ├─ game.py
+│   ├─ tetromino.py
+│   ├─ board.py
+│   ├─ piece.py
+│   ├─ utils.py
+│   └─ settings.py
+├─ assets/
+│   ├─ images/
+│   │   ├─ background.png           # 800x600
+│   │   ├─ board_tile.png           # 30x30
+│   │   ├─ tetromino_I.png          # 30x30
+│   │   ├─ tetromino_J.png          # 30x30
+│   │   ├─ tetromino_L.png          # 30x30
+│   │   ├─ tetromino_O.png          # 30x30
+│   │   ├─ tetromino_S.png          # 30x30
+│   │   ├─ tetromino_T.png          # 30x30
+│   │   ├─ tetromino_Z.png          # 30x30
+│   │   └─ tetromino_SpriteSheet.png  # optional 210x30 (7 pieces * 30)
+│   └─ sounds/
+│       ├─ line_clear.wav
+│       ├─ rotate.wav
+│       ├─ drop.wav
+│       └─ game_over.wav
+├─ data/
+├─ tests/
+├─ README.md
+├─ requirements.txt
+└─ .gitignore
 ```
 
-## Details
+## Core Source Files
 
-- **assets/images**: Holds all PNG images used in the game. Each image file is referenced by its logical name (e.g., `player.png`).
-- **assets/sounds**: Holds all audio files (WAV/OGG) used for sound effects and background music.
-- **assets/fonts**: Holds custom font files (TTF/OTF) for rendered text.
-- **src**: Contains all Python source code.
-  - **main.py**: Entry point; initializes Pygame, loads assets, and runs the game loop.
-  - **player.py**: Player character class and related logic.
-  - **enemy.py**: Enemy character class and related logic.
-  - **bullet.py**: Bullet/sprite class.
-  - **utils.py**: Helper functions and constants.
-  - **settings.py**: Global constants (screen size, FPS, colors, etc.).
-- **config**: Optional external configuration files (e.g., YAML for difficulty settings).
-- **requirements.txt**: Python dependencies (e.g., `pygame`).
-- **README.md**: High‑level project description and usage instructions.
-- **Project_Structure.md**: This file.
+- **src/main.py** – Entry point, initializes Pygame and starts the game loop.  
+- **src/game.py** – Manages game state, input handling, and overall flow.  
+- **src/tetromino.py** – Defines Tetromino class and its shapes/rotations.  
+- **src/board.py** – Represents the playing board, collision detection, and line clearing.  
+- **src/piece.py** – Encapsulates a single falling piece (position, shape, rotation).  
+- **src/utils.py** – Helper functions (e.g., matrix operations, color utilities).  
+- **src/settings.py** – Game configuration constants (colors, speeds, grid size).  
+- **src/config.json** – External JSON configuration for adjustable settings.  
 
-## Asset Requirements
+## Asset Details
 
-- All image assets must be in **PNG** format unless otherwise noted, with dimensions specified in the asset list (see `Assets.md`).
-- Sound assets must be in **WAV** or **OGG** format.
-- Font files should be **TTF** or **OTF**.
+- **images/background.png** – 800 × 600 PNG, used as the game background.  
+- **images/board_tile.png** – 30 × 30 PNG, individual tile graphic for the board.  
+- **images/tetromino_*.png** – 30 × 30 PNG files for each of the 7 tetromino shapes (I, J, L, O, S, T, Z).  
+  - Alternatively, a single **images/tetromino_SpriteSheet.png** (210 × 30 PNG) may be used to contain all shapes side‑by‑side.  
+- **sounds/line_clear.wav** – Sound effect played when a line is cleared.  
+- **sounds/rotate.wav** – Sound effect for piece rotation.  
+- **sounds/drop.wav** – Sound effect when a piece drops.  
+- **sounds/game_over.wav** – Sound effect for game‑over event.  
 
-Once all assets are placed in the appropriate subfolders under `assets/`, the game can be run by executing `python src/main.py`.
+All sound files are standard WAV format, typically short (<1 s) effects.
 
-*Commit this structure to the repository to ensure reproducibility and ease of onboarding for new developers.*
+---  
+
+*The above structure provides a clear organization for source code, assets, data, and tests, making the project easy to navigate and extend.*\n
