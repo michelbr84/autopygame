@@ -1,64 +1,61 @@
-# src/board.py
 import pygame
-from src.settings import SETTINGS
 
 class Board:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        # 2D grid where 0 represents an empty cell
-        self.grid = [[0 for _ in range(width)] for _ in range(height)]
+    def __init__(self, settings):
+        self.settings = settings
+        self.grid = [[0 for _ in range(settings['BOARD_WIDTH'])] for _ in range(settings['BOARD_HEIGHT'])]
+        self.locked_shapes = {}
 
-    def is_empty(self, x, y):
-        return 0 <= x < self.width and y < self.height and self.grid[y][x] == 0
+    def is_valid_position(self, shape, x, y):
+        """Check if the given shape at (x, y) stays inside the board boundaries."""
+        board_width = self.settings['BOARD_WIDTH']
+        board_height = self.settings['BOARD_HEIGHT']
+        for row_idx, row in enumerate(shape):
+            for col_idx, val in enumerate(row):
+                if val:
+                    new_x = x + col_idx
+                    new_y = y + row_idx
+                    if new_x < 0 or new_x >= board_width:
+                        return False
+                    if new_y < 0 or new_y >= board_height:
+                        return False
+        return True
 
     def lock_piece(self, piece):
-        """Lock the current piece into the board grid."""
-        for x, y in piece.coordinates():
-            if 0 <= x < self.width and y < self.height:
-                self.grid[y][x] = piece.id + 1  # store piece identifier (1‑7)
-
-    def get_color(self, piece_id):
-        """Return a color for a given piece identifier."""
-        # Colors align with SETTINGS['COLORS'] (1‑based indexing)
-        colors = [
-            (0, 0, 0),  # placeholder for index 0 (unused)
-        ] + [SETTINGS['COLORS'][name] for name in ['RED', 'GREEN', 'BLUE', 'YELLOW', 'CYAN', 'MAGENTA', 'ORANGE']]
-        return colors[piece_id]
+        """Lock the current piece into the grid."""
+        for row_idx, row in enumerate(piece.get_shape()):
+            for col_idx, val in enumerate(row):
+                if val:
+                    grid_x = piece.x + col_idx
+                    grid_y = piece.y + row_idx
+                    if 0 <= grid_x < self.settings['BOARD_WIDTH'] and 0 <= grid_y < self.settings['BOARD_HEIGHT']:
+                        self.grid[grid_y][grid_x] = piece.get_color()
 
     def clear_lines(self):
-        """Remove all completed lines and return the number of lines cleared."""
-        lines_cleared = 0
+        """Remove any completely filled rows and shift everything down."""
         new_grid = []
+        lines_cleared = 0
         for row in self.grid:
-            if all(cell != 0 for cell in row):
-                lines_cleared += 1
-            else:
+            if not self._is_full_row(row):
                 new_grid.append(row)
-        # Insert empty rows at the top for the cleared lines
-        for _ in range(lines_cleared):
-            new_grid.insert(0, [0 for _ in range(self.width)])
+            else:
+                lines_cleared += 1
+        # Add empty rows at the top
+        while len(new_grid) < len(self.grid):
+            new_grid.insert(0, [0 for _ in range(self.settings['BOARD_WIDTH'])])
         self.grid = new_grid
-        return lines_cleared
 
-    def is_game_over(self):
-        """Check if the board is full in the top row (game over condition)."""
-        return any(self.grid[0][x] != 0 for x in range(self.width))
+    def _is_full_row(self, row):
+        return all(row)
 
-    def draw(self, surface, tile_image):
-        """Draw the board onto the given surface using the provided tile image."""
+    def draw(self, surface):
+        """Draw the board grid and any locked pieces."""
+        cell_size = self.settings['CELL_SIZE']
         for y, row in enumerate(self.grid):
-            for x, cell in enumerate(row):
-                if cell != 0:
-                    # Draw a colored rectangle for the locked block
-                    color = self.get_color(cell)
+            for x, color in enumerate(row):
+                if color:
                     pygame.draw.rect(
                         surface,
                         color,
-                        (x * SETTINGS['TILE_SIZE'],
-                         y * SETTINGS['TILE_SIZE'],
-                         SETTINGS['TILE_SIZE'],
-                         SETTINGS['TILE_SIZE'])
+                        (x * cell_size, y * cell_size, cell_size, cell_size)
                     )
-                    # Optionally overlay the tile image
-                    # surface.blit(tile_image, (x * SETTINGS['TILE_SIZE'], y * SETTINGS['TILE_SIZE']))
