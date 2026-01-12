@@ -1,106 +1,68 @@
-# src/piece.py
-import random
-from .settings import SETTINGS
-
-# Define the 7 tetromino shapes as lists of (x, y) offsets relative to a reference point.
-# Each shape is indexed by the piece ID (1‑7). The shapes are stored in the order:
-# 1: I, 2: J, 3: L, 4: O, 5: S, 6: T, 7: Z
-SHAPES = {
-    1: [    # I
-        [(0, 0), (0, 1), (0, 2), (0, 3)],
-        [(1, 0), (1, 1), (1, 2), (1, 3)],
-        [(0, 0), (1, 0), (2, 0), (3, 0)],
-        [(0, 1), (1, 1), (2, 1), (3, 1)]
-    ],
-    2: [    # J
-        [(0, 0), (1, 0), (2, 0), (2, 1)],
-        [(0, 1), (0, 2), (0, 3), (1, 3)],
-        [(1, 0), (1, 1), (1, 2), (0, 2)],
-        [(2, 1), (2, 2), (2, 3), (1, 3)]
-    ],
-    3: [    # L
-        [(0, 1), (1, 1), (2, 1), (2, 0)],
-        [(0, 0), (0, 1), (0, 2), (1, 0)],
-        [(0, 0), (1, 0), (2, 0), (0, 1)],
-        [(1, 0), (1, 1), (1, 2), (2, 2)]
-    ],
-    4: [    # O
-        [(0, 0), (1, 0), (0, 1), (1, 1)],
-        [(0, 0), (1, 0), (0, 1), (1, 1)],
-        [(0, 0), (1, 0), (0, 1), (1, 1)],
-        [(0, 0), (1, 0), (0, 1), (1, 1)]
-    ],
-    5: [    # S
-        [(1, 0), (2, 0), (0, 1), (1, 1)],
-        [(1, 0), (1, 1), (0, 2), (0, 3)],
-        [(0, 0), (1, 0), (0, 1), (1, 1)],
-        [(1, 1), (2, 1), (0, 2), (1, 2)]
-    ],
-    6: [    # T
-        [(0, 0), (1, 0), (2, 0), (1, 1)],
-        [(0, 1), (1, 1), (1, 2), (1, 0)],
-        [(1, 0), (1, 1), (2, 1), (0, 2)],
-        [(0, 1), (1, 1), (0, 2), (1, 2)]
-    ],
-    7: [    # Z
-        [(0, 0), (1, 0), (1, 1), (2, 1)],
-        [(1, 0), (1, 1), (0, 2), (1, 2)],
-        [(0, 1), (1, 1), (1, 2), (2, 2)],
-        [(1, 0), (2, 0), (1, 1), (2, 1)]
-    ]
-}
+from . import utils
+import pygame
 
 class Piece:
-    """Represents a single falling tetromino piece."""
+    def __init__(self, settings):
+        self.settings = settings
+        self.type = utils.random_shape()
+        self.color = utils.random_color()
+        self.shape = utils.get_shape(self.type)
+        self.x = settings['BOARD_WIDTH'] // 2 - len(self.shape[0]) // 2
+        self.y = 0
 
-    def __init__(self, piece_id=None, rotation=0):
-        if piece_id is None:
-            piece_id = random.randint(1, 7)
-        self.id = piece_id
-        self.rotation = rotation
-        self.shape = SHAPES[piece_id][rotation]
-
-    @staticmethod
-    def random_piece():
-        """Factory method to create a random piece with a random rotation."""
-        piece_id = random.randint(1, 7)
-        rotation = random.randint(0, 3)
-        return Piece(piece_id, rotation)
-
-    def coordinates(self):
-        """Return the absolute board coordinates of the piece based on its shape and rotation."""
+    def get_shape(self):
         return self.shape
 
-    def move(self, dx, dy, board_width=SETTINGS['BOARD_WIDTH'], board_height=SETTINGS['BOARD_HEIGHT']):
-        """
-        Attempt to move the piece by (dx, dy).
-        Returns True if the move was successful, False if it collided.
-        """
-        new_coords = [(x + dx, y + dy) for (x, y) in self.shape]
-        # Check bounds and emptiness
-        for x, y in new_coords:
-            if not (0 <= x < board_width) or not (0 <= y < board_height):
-                return False
-        # Check collision with other locked blocks (self.board will need to be passed in)
-        # For simplicity we just return True here; in the Game.update method collisions are checked indirectly.
-        self.shape = new_coords
+    def get_color(self):
+        return self.color
+
+    def move(self, dx, dy, steps=1):
+        self.x += dx * steps
+        self.y += dy * steps
+
+    def rotate(self):
+        # Rotate the shape 90 degrees clockwise
+        rotated = [list(row) for row in zip(*self.shape[::-1])]
+        self.shape = rotated
+
+        # Adjust position after rotation to keep it on the board when possible
+        while not self._is_valid_position(self.shape, self.x, self.y):
+            # Try shifting left
+            if self._is_valid_position(self.shape, self.x - 1, self.y):
+                self.x -= 1
+                break
+            # Try shifting right
+            if self._is_valid_position(self.shape, self.x + 1, self.y):
+                self.x += 1
+                break
+            # If neither works, stop rotating
+            break
+
+    def _is_valid_position(self, shape, x, y):
+        """Check whether the given shape at (x, y) lies completely within the board."""
+        board_width = self.settings['BOARD_WIDTH']
+        board_height = self.settings['BOARD_HEIGHT']
+        for row_idx, row in enumerate(shape):
+            for col_idx, val in enumerate(row):
+                if val:
+                    new_x = x + col_idx
+                    new_y = y + row_idx
+                    if new_x < 0 or new_x >= board_width:
+                        return False
+                    if new_y < 0 or new_y >= board_height:
+                        return False
         return True
 
-    def rotate(self, board):
-        """
-        Rotate the piece clockwise. If the rotation would cause a collision,
-        the rotation is canceled and the method returns False.
-        """
-        # Get next rotation index
-        next_rot = (self.rotation + 1) % 4
-        next_shape = SHAPES[self.id][next_rot]
-        # Tentatively set shape
-        original_shape = self.shape
-        self.shape = next_shape
-        # Simple collision test: ensure all new coordinates are within bounds and empty
-        for x, y in self.shape:
-            if not (0 <= x < SETTINGS['BOARD_WIDTH']) or not (0 <= y < SETTINGS['BOARD_HEIGHT']):
-                self.shape = original_shape  # revert
-                return False
-        # Additional collision check could be added here using board data.
-        return True
+    def draw(self, surface):
+        """Draw the piece on the given surface."""
+        cell_size = self.settings['CELL_SIZE']
+        for row_idx, row in enumerate(self.shape):
+            for col_idx, val in enumerate(row):
+                if val:
+                    rect = pygame.Rect(
+                        (self.x + col_idx) * cell_size,
+                        (self.y + row_idx) * cell_size,
+                        cell_size,
+                        cell_size
+                    )
+                    pygame.draw.rect(surface, self.color, rect)
