@@ -1,22 +1,43 @@
-WINDOW_WIDTH = 400
-WINDOW_HEIGHT = 600
-CELL_SIZE = 30
-FPS = 60
-BOARD_WIDTH = 10
-BOARD_HEIGHT = 20
-DROP_SPEED = 1000
-PAUSE_KEY = 'p'
-LEFT_KEY = 'left'
-RIGHT_KEY = 'right'
-DOWN_KEY = 'down'
-ROTATE_KEY = 'up'
+import json
+from pathlib import Path
 
-COLORS = {
-    'I': (0, 255, 255),
-    'O': (255, 255, 0),
-    'T': (128, 0, 128),
-    'S': (0, 255, 0),
-    'Z': (255, 0, 0),
-    'J': (0, 0, 255),
-    'L': (255, 165, 0),
-}
+# Resolve settings.json located at the project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SETTINGS_PATH = PROJECT_ROOT / "settings.json"
+
+# Load JSON
+with SETTINGS_PATH.open('r') as f:
+    SETTINGS = json.load(f)
+
+# Export individual constants from the loaded settings
+WINDOW_WIDTH = SETTINGS["WINDOW_WIDTH"]
+WINDOW_HEIGHT = SETTINGS["WINDOW_HEIGHT"]
+CELL_SIZE = SETTINGS["CELL_SIZE"]
+FPS = SETTINGS["FPS"]
+BOARD_WIDTH = SETTINGS["BOARD_WIDTH"]
+BOARD_HEIGHT = SETTINGS["BOARD_HEIGHT"]
+DROP_SPEED = SETTINGS["DROP_SPEED"]
+PAUSE_KEY = SETTINGS["PAUSE_KEY"]
+LEFT_KEY = SETTINGS["LEFT_KEY"]
+RIGHT_KEY = SETTINGS["RIGHT_KEY"]
+DOWN_KEY = SETTINGS["DOWN_KEY"]
+ROTATE_KEY = SETTINGS["ROTATE_KEY"]
+COLORS = SETTINGS["COLORS"]
+
+# Re-export the SETTINGS dict for convenience
+__all__ = [
+    "SETTINGS",
+    "WINDOW_WIDTH",
+    "WINDOW_HEIGHT",
+    "CELL_SIZE",
+    "FPS",
+    "BOARD_WIDTH",
+    "BOARD_HEIGHT",
+    "DROP_SPEED",
+    "PAUSE_KEY",
+    "LEFT_KEY",
+    "RIGHT_KEY",
+    "DOWN_KEY",
+    "ROTATE_KEY",
+    "COLORS",
+]
